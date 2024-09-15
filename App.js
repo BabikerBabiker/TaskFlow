@@ -1,4 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Notifications from "expo-notifications";
+import * as Permissions from "expo-permissions";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
@@ -27,6 +31,11 @@ export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [editingTaskId, setEditingTaskId] = useState(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [selectedTaskForNotification, setSelectedTaskForNotification] =
+    useState(null);
+  const [showTaskInput, setShowTaskInput] = useState(true);
 
   useEffect(() => {
     loadTasks();
@@ -53,6 +62,71 @@ export default function App() {
   useEffect(() => {
     scheduleClearTasksAtMidnight();
   }, []);
+
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
+
+  const registerForPushNotificationsAsync = async () => {
+    const { status } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+    if (status !== "granted") {
+      const { status: newStatus } = await Permissions.askAsync(
+        Permissions.NOTIFICATIONS
+      );
+      if (newStatus !== "granted") {
+        alert("You need to enable notifications for this app.");
+      }
+    }
+  };
+
+  const onTimeChange = (event, date) => {
+    if (event.type === "set" && date) {
+      setSelectedTime(date);
+    } else {
+      setShowTimePicker(false);
+    }
+  };
+
+  const openTimePicker = (task) => {
+    setSelectedTaskForNotification(task);
+    setShowTaskInput(false);
+    setShowTimePicker(true);
+  };
+
+  const scheduleNotification = async (task, date) => {
+    try {
+      const now = new Date();
+      const timeUntilNotification = date.getTime() - now.getTime();
+
+      if (timeUntilNotification > 0) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Reminder",
+            body: task.task,
+          },
+          trigger: {
+            seconds: Math.floor(timeUntilNotification / 1000),
+          },
+        });
+
+        const updatedTasks = taskList.map((t) =>
+          t.id === task.id
+            ? { ...t, notificationSet: true, reminderTime: date.toISOString() }
+            : t
+        );
+        setTaskList(updatedTasks);
+        saveTasks(updatedTasks);
+
+        return Promise.resolve();
+      } else {
+        return Promise.reject(
+          new Error("Selected time must be in the future.")
+        );
+      }
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
 
   const loadTasks = async () => {
     try {
@@ -81,7 +155,13 @@ export default function App() {
     }
 
     const newTaskList = [
-      { id: Date.now().toString(), task, completed: false },
+      {
+        id: Date.now().toString(),
+        task,
+        completed: false,
+        notificationSet: false,
+        reminderTime: null,
+      },
       ...taskList,
     ];
     const sortedTaskList = sortTasks(newTaskList);
@@ -133,30 +213,57 @@ export default function App() {
     </TouchableOpacity>
   );
 
-  const renderItem = ({ item }) => (
-    <Swipeable renderRightActions={() => renderRightActions(item.id)}>
-      <TouchableOpacity onPress={() => openEditModal(item)}>
-        <View style={styles.taskContainer}>
-          <TouchableOpacity
-            onPress={() => toggleTaskComplete(item.id)}
-            style={styles.circleContainer}
-          >
-            <View
-              style={[styles.circle, item.completed && styles.circleCompleted]}
-            />
-          </TouchableOpacity>
-          <Text
-            style={[
-              styles.taskText,
-              item.completed && styles.taskTextCompleted,
-            ]}
-          >
-            {item.task}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    </Swipeable>
-  );
+  const renderItem = ({ item }) => {
+    const reminderTime = item.reminderTime ? new Date(item.reminderTime) : null;
+
+    return (
+      <Swipeable renderRightActions={() => renderRightActions(item.id)}>
+        <TouchableOpacity onPress={() => openEditModal(item)}>
+          <View style={styles.taskContainer}>
+            <TouchableOpacity
+              onPress={() => toggleTaskComplete(item.id)}
+              style={styles.circleContainer}
+            >
+              <View
+                style={[
+                  styles.circle,
+                  item.completed && styles.circleCompleted,
+                ]}
+              />
+            </TouchableOpacity>
+            <View style={styles.taskInfoContainer}>
+              <Text
+                style={[
+                  styles.taskText,
+                  item.completed && styles.taskTextCompleted,
+                ]}
+              >
+                {item.task}
+              </Text>
+              {item.notificationSet && reminderTime && (
+                <Text style={styles.reminderText}>
+                  {reminderTime.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              )}
+            </View>
+            <TouchableOpacity
+              style={styles.infoIcon}
+              onPress={() => openTimePicker(item)}
+            >
+              <Ionicons
+                name="information-circle-outline"
+                size={24}
+                color="blue"
+              />
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Swipeable>
+    );
+  };
 
   const getFormattedDate = () => {
     const now = new Date();
@@ -205,20 +312,59 @@ export default function App() {
             renderItem={renderItem}
             contentContainerStyle={styles.taskList}
           />
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter a task"
-              value={task}
-              onChangeText={setTask}
-              onSubmitEditing={addTask}
-              blurOnSubmit={false}
-              placeholderTextColor="#999"
-            />
-            <TouchableOpacity style={styles.addButton} onPress={addTask}>
-              <Text style={styles.addButtonText}>Add Task</Text>
-            </TouchableOpacity>
-          </View>
+
+          {showTimePicker ? (
+            <View style={styles.timePickerContainer}>
+              <DateTimePicker
+                mode="time"
+                value={selectedTime}
+                display="spinner"
+                onChange={onTimeChange}
+                style={styles.timePicker}
+              />
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => {
+                  scheduleNotification(
+                    selectedTaskForNotification,
+                    selectedTime
+                  )
+                    .then(() => {
+                      Alert.alert(
+                        "Reminder Set",
+                        "Your reminder has been set successfully."
+                      );
+                      setShowTimePicker(false);
+                      setShowTaskInput(true);
+                    })
+                    .catch((error) => {
+                      console.error("Error scheduling notification:", error);
+                      Alert.alert(
+                        "Error",
+                        error.message ||
+                          "There was an issue setting the reminder."
+                      );
+                    });
+                }}
+              >
+                <Text style={styles.addButtonText}>Set Reminder</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            showTaskInput && (
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={task}
+                  onChangeText={(text) => setTask(text)}
+                  placeholder="Enter your task here..."
+                />
+                <TouchableOpacity style={styles.addButton} onPress={addTask}>
+                  <Text style={styles.addButtonText}>Add Task</Text>
+                </TouchableOpacity>
+              </View>
+            )
+          )}
 
           <Modal
             visible={modalVisible}
@@ -298,10 +444,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
+  infoIcon: {
+    marginLeft: "auto",
+    marginRight: 10,
+  },
+  reminderText: {
+    color: "orange",
+    fontSize: 14,
+    marginLeft: 10,
+    marginRight: 10,
+    flexWrap: "wrap",
+    flexShrink: 1,
+  },
+
   taskContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     padding: 15,
     backgroundColor: "#FFF",
     borderRadius: 8,
@@ -310,13 +468,20 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 2,
     marginBottom: 10,
-    height: 60,
   },
+  taskInfoContainer: {
+    flexDirection: "row",
+    flex: 1,
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+  },
+
   taskText: {
     flex: 1,
     fontSize: 16,
     color: "#333",
     marginRight: 10,
+    flexWrap: "wrap",
   },
   taskTextCompleted: {
     textDecorationLine: "line-through",
