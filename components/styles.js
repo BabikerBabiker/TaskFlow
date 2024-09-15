@@ -1,0 +1,171 @@
+import { StyleSheet } from "react-native";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    paddingTop: 50,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "600",
+    color: "#000",
+    textAlign: "center",
+    marginTop: 20,
+    marginBottom: 20,
+    lineHeight: 36,
+  },
+  taskList: {
+    paddingHorizontal: 20,
+    flexGrow: 1,
+  },
+  inputContainer: {
+    paddingHorizontal: 20,
+    backgroundColor: "#F5F5F5",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#FFF",
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 10,
+  },
+  addButton: {
+    backgroundColor: "#4169e1",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 25,
+  },
+  addButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  infoIcon: {
+    marginLeft: "auto",
+    marginRight: 10,
+  },
+  reminderText: {
+    color: "orange",
+    fontSize: 14,
+    marginLeft: 10,
+    marginRight: 10,
+    flexWrap: "wrap",
+    flexShrink: 1,
+  },
+  reminderTextPastDue: {
+    color: "red",
+    fontSize: 14,
+    marginLeft: 10,
+    marginRight: 10,
+    flexWrap: "wrap",
+    flexShrink: 1,
+  },
+
+  taskContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 15,
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
+    marginBottom: 10,
+  },
+  taskInfoContainer: {
+    flexDirection: "row",
+    flex: 1,
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+  },
+
+  taskText: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+    marginRight: 10,
+    flexWrap: "wrap",
+  },
+  taskTextCompleted: {
+    textDecorationLine: "line-through",
+    color: "#A9A9A9",
+  },
+  circleContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#4169e1",
+  },
+  circleCompleted: {
+    backgroundColor: "#4169e1",
+  },
+  deleteButtonContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 75,
+    backgroundColor: "#FF6347",
+    borderRadius: 10,
+    marginVertical: 5,
+    top: -5,
+  },
+  deleteButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    marginBottom: 250,
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "#FFF",
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#FFF",
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 10,
+  },
+  modalSaveButton: {
+    backgroundColor: "#4169e1",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalSaveButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+});
+
+export default styles;
