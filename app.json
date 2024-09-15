@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "todo",
+    "name": "TaskFlow",
     "slug": "todo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,16 +12,23 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bbabiker.todo"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.bbabiker.taskflow"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fd780986-61d4-4601-9d6b-bdc0c53c0c5f"
+      }
     }
   }
 }
