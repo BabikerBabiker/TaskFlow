@@ -200,8 +200,15 @@ export default function App() {
 
   const sortTasks = (tasks) => {
     return tasks.sort((a, b) => {
+      if (a.completed && !b.completed) {
+        return 1;
+      }
+      if (!a.completed && b.completed) {
+        return -1;
+      }
+
       if (!a.reminderTime && !b.reminderTime) {
-        return a.completed - b.completed;
+        return 0;
       }
 
       if (a.reminderTime && !b.reminderTime) {
